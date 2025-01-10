@@ -9,11 +9,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/database"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/pkg"
+	"github.com/yaninyzwitty/pulsar-outbox-products-service/pulsar"
 )
 
 var (
 	cfg      pkg.Config
 	password string
+	token    string
 )
 
 func main() {
@@ -42,6 +44,10 @@ func main() {
 
 	}
 
+	if t := os.Getenv("PULSAR_TOKEN"); t != "" {
+		token = t
+	}
+
 	dbConfig := database.DbConfig{
 		Host:     cfg.Database.Host,
 		Port:     5432,
@@ -64,5 +70,27 @@ func main() {
 		slog.Error("failed to ping db", "error", err)
 		os.Exit(1)
 	}
+
+	pulsarCfg := pulsar.PulsarConfig{
+		URI:       cfg.Pulsar.URI,
+		Token:     token,
+		TopicName: cfg.Pulsar.TopicName,
+	}
+
+	pulsarClient, err := pulsarCfg.CreatePulsarConnection(ctx)
+	if err != nil {
+		slog.Error("failed to create pulsar connection", "error", err)
+		os.Exit(1)
+	}
+
+	defer pulsarClient.Close()
+
+	producer, err := pulsarCfg.CreatePulsarProducer(ctx, pulsarClient)
+	if err != nil {
+		slog.Error("failed to create pulsar producer", "error", err)
+		os.Exit(1)
+	}
+
+	defer producer.Close()
 
 }
