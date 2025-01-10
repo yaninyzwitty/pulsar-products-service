@@ -1,0 +1,13 @@
+server:
+  port: 3000
+database:
+  username: neondb_owner 
+  password: GAVd8wZj2SCp 
+  host: ep-dark-unit-a2z9twbi-pooler.eu-central-1.aws.neon.tech
+  database: neondb 
+  ssl_mode: require
+pulsar:
+  uri: pulsar+ssl://pulsar-aws-eucentral1.streaming.datastax.com:6651
+  topic_name: persistent://witty-tenant/default/products_topic
+  token: some_token
+  
