@@ -1,14 +1,22 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+	"time"
 
+	"github.com/joho/godotenv"
+	"github.com/yaninyzwitty/pulsar-outbox-products-service/database"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/pkg"
 )
 
+var (
+	cfg      pkg.Config
+	password string
+)
+
 func main() {
-	var cfg pkg.Config
 
 	file, err := os.Open("config.yaml")
 	if err != nil {
@@ -19,6 +27,41 @@ func main() {
 
 	if err := cfg.LoadConfig(file); err != nil {
 		slog.Error("failed to load config", "error", err)
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := godotenv.Load(); err != nil {
+		slog.Error("failed to load .env", "error", err)
+		os.Exit(1)
+	}
+	if s := os.Getenv("DB_PASSWORD"); s != "" {
+		password = s
+
+	}
+
+	dbConfig := database.DbConfig{
+		Host:     cfg.Database.Host,
+		Port:     5432,
+		User:     cfg.Database.User,
+		Password: password,
+		DbName:   cfg.Database.Database,
+		SSLMode:  cfg.Database.SSLMode,
+		MaxConn:  500,
+	}
+
+	pool, err := dbConfig.NewPgxPool(ctx, 30)
+	if err != nil {
+		slog.Error("failed to create pgx pool", "error", err)
+		os.Exit(1)
+	}
+
+	defer pool.Close()
+
+	if err := dbConfig.Ping(ctx, pool, 30); err != nil {
+		slog.Error("failed to ping db", "error", err)
 		os.Exit(1)
 	}
 
