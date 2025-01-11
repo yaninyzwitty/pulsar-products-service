@@ -10,6 +10,7 @@ import (
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/database"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/pkg"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/pulsar"
+	"github.com/yaninyzwitty/pulsar-outbox-products-service/sonyflake"
 )
 
 var (
@@ -65,6 +66,20 @@ func main() {
 	}
 
 	defer pool.Close()
+
+	err = sonyflake.InitSonyFlake()
+	if err != nil {
+		slog.Error("failed to init sonyflake", "error", err)
+		os.Exit(1)
+	}
+
+	sonyflakId, err := sonyflake.GenerateID()
+	if err != nil {
+		slog.Error("failed to generate sonyflake id", "error", err)
+		os.Exit(1)
+	}
+
+	slog.Info("sonyflake id", "id", sonyflakId)
 
 	if err := dbConfig.Ping(ctx, pool, 30); err != nil {
 		slog.Error("failed to ping db", "error", err)
