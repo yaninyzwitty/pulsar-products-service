@@ -7,7 +7,6 @@ This is a microservice aimed to show you how you design an outbox pattern to ens
 
 I wanted to refine my learning experience and improve my knowledge on designing realistic event driven architectures, especially with pulsar which is deemed to be better than kafka (it has a lower latency) in some cases. Also i wanted to be more informative on implementing transactions in golang, furthermore the outbox pattern separates database operations from event publishing, which ensures consistency.Moreover, I chose golang, instead of some other language, like typescript because I wanted to take advantage of its concurrency pattern, It worked really well.
 
-<details>
 
 ## FEATURES
 
