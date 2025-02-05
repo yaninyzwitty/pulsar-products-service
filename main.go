@@ -27,7 +27,7 @@ var (
 
 func main() {
 	// Load configuration
-	file, err := os.Open("config.yaml")
+	file, err := os.Open("my_config.yaml")
 	if err != nil {
 		slog.Error("failed to open config.yaml", "error", err)
 		os.Exit(1)
