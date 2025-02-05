@@ -1,7 +1,7 @@
 services:
   pulsar-products-service:
     # image: yaninyzwitty/pulsar-products-service:latest
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     ports:
@@ -14,15 +14,13 @@ services:
     networks:
       - private_network
 
-
-
 configs:
   my_config:
-    file: config.yaml  
+    file: config.yaml
 networks:
   private_network:
     driver: bridge
     ipam:
       config:
-        - subnet: "10.0.0.0/19"
-          gateway: "10.0.0.1"
+        - subnet: "192.168.100.0/24"
+          gateway: "192.168.100.1"
