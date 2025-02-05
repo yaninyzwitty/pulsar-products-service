@@ -10,3 +10,4 @@ pulsar:
   topic_name: persistent://witty-tenant/default/products_topic
   token: some_token
   
+
