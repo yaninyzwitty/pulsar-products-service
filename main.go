@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/controller"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/database"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/helpers"
@@ -28,7 +27,7 @@ var (
 
 func main() {
 	// Load configuration
-	file, err := os.Open("config.yaml")
+	file, err := os.Open("my_config.yaml")
 	if err != nil {
 		slog.Error("failed to open config.yaml", "error", err)
 		os.Exit(1)
@@ -40,10 +39,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := godotenv.Load(); err != nil {
-		slog.Error("failed to load .env", "error", err)
-		os.Exit(1)
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	slog.Error("failed to load .env", "error", err)
+	// 	os.Exit(1)
+	// }
 	password = os.Getenv("DB_PASSWORD")
 	token = os.Getenv("PULSAR_TOKEN")
 
