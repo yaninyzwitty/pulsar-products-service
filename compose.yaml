@@ -1,6 +1,6 @@
 services:
   pulsar-products-service:
-    # image: yaninyzwitty/pulsar-products-service:latest
+    image: yaninyzwitty/pulsar-products-service:latest
     build:
       context: .
       dockerfile: Dockerfile
