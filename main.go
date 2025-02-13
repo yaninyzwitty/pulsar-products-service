@@ -10,53 +10,46 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/controller"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/database"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/helpers"
-	"github.com/yaninyzwitty/pulsar-outbox-products-service/pkg"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/pulsar"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/router"
 	"github.com/yaninyzwitty/pulsar-outbox-products-service/sonyflake"
 )
 
 var (
-	cfg      pkg.Config
-	password string
-	token    string
+	password  string
+	token     string
+	host      = "ep-dark-unit-a2z9twbi-pooler.eu-central-1.aws.neon.tech"
+	dbName    = "neondb"
+	SSLMode   = "require"
+	pulsarURI = "pulsar+ssl://pulsar-aws-eucentral1.streaming.datastax.com:6651"
+	TopicName = "persistent://witty-cluster/default/products_topic"
+	port      = 3000
 )
 
 func main() {
-	// Load configuration
-	file, err := os.Open("my_config.yaml")
-	if err != nil {
-		slog.Error("failed to open config.yaml", "error", err)
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		slog.Error("failed to load .env", "error", err)
 		os.Exit(1)
 	}
-	defer file.Close()
-
-	if err := cfg.LoadConfig(file); err != nil {
-		slog.Error("failed to load config", "error", err)
-		os.Exit(1)
-	}
-
-	// if err := godotenv.Load(); err != nil {
-	// 	slog.Error("failed to load .env", "error", err)
-	// 	os.Exit(1)
-	// }
-	password = os.Getenv("DB_PASSWORD")
-	token = os.Getenv("PULSAR_TOKEN")
+	password = helpers.GetEnvOrDefault("DB_PASSWORD", "")
+	token = helpers.GetEnvOrDefault("PULSAR_TOKEN", "")
 
 	// Initialize dependencies
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	dbConfig := database.DbConfig{
-		Host:     cfg.Database.Host,
+		Host:     host,
 		Port:     5432,
-		User:     cfg.Database.User,
+		User:     "neondb_owner",
 		Password: password,
-		DbName:   cfg.Database.Database,
-		SSLMode:  cfg.Database.SSLMode,
+		DbName:   dbName, // Fixed typo (dnName → dbName)
+		SSLMode:  SSLMode,
 		MaxConn:  500,
 	}
 
@@ -78,9 +71,9 @@ func main() {
 	}
 
 	pulsarCfg := pulsar.PulsarConfig{
-		URI:       cfg.Pulsar.URI,
+		URI:       pulsarURI, // Used hardcoded URI instead of uninitialized cfg.Pulsar.URI
 		Token:     token,
-		TopicName: cfg.Pulsar.TopicName,
+		TopicName: TopicName, // Used hardcoded topic instead of uninitialized cfg.Pulsar.TopicName
 	}
 
 	pulsarClient, err := pulsarCfg.CreatePulsarConnection(ctx)
@@ -98,19 +91,19 @@ func main() {
 	defer producer.Close()
 
 	productController := controller.NewProductsController(pool)
-	router := router.NewRouter(productController)
+	appRouter := router.NewRouter(productController) // Renamed to avoid conflict
 
 	// Start the server
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
-		Handler: router,
+		Addr:    fmt.Sprintf(":%d", port), // This assumes port is set elsewhere
+		Handler: appRouter,
 	}
 
 	stopCh := make(chan os.Signal, 1)
 	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		slog.Info("SERVER starting", "port", cfg.Server.Port)
+		slog.Info("SERVER starting", "port", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "error", err)
 			os.Exit(1)

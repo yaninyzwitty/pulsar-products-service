@@ -7,7 +7,7 @@ database:
   ssl_mode: require
 pulsar:
   uri: pulsar+ssl://pulsar-aws-eucentral1.streaming.datastax.com:6651
-  topic_name: persistent://witty-tenant/default/products_topic
+  topic_name: persistent://witty-cluster/default/products_topic
   token: some_token
   
 
