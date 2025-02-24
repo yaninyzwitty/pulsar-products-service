@@ -25,7 +25,11 @@ func NewRouter(productController controller.ProductsController) http.Handler {
 	}))
 
 	router.Route("/", func(r chi.Router) {
-		r.Post("/", productController.CreateProduct)
+		r.Post("/products", productController.CreateProduct)
+		r.Get("/products", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Hello World!"))
+
+		})
 	})
 
 	return router
